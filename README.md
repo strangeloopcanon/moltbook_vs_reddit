@@ -11,12 +11,14 @@ make setup
 make all
 ```
 
+Note: `make` exports `PYTHONPATH=src`. If you run commands directly, prefix with `PYTHONPATH=src`.
+
 ## Build the corpora
 
 ### Moltbook
 
 ```bash
-uv run python -m moltbook_analysis ingest-moltbook --db data/conversations.sqlite
+PYTHONPATH=src uv run python -m moltbook_analysis ingest-moltbook --db data/conversations.sqlite
 ```
 
 ### Reddit baseline (downloadable dump; no scraping)
@@ -24,7 +26,7 @@ uv run python -m moltbook_analysis ingest-moltbook --db data/conversations.sqlit
 This reads a random-ish sample of comments from a `.zst` NDJSON dump by streaming `curl | zstd -dc`.
 
 ```bash
-uv run python -m moltbook_analysis ingest-reddit \
+PYTHONPATH=src uv run python -m moltbook_analysis ingest-reddit \
   --db data/conversations.sqlite \
   --source reddit \
   --source-url 'https://zenodo.org/records/3608135/files/RC_2019-04.zst?download=1' \
@@ -40,7 +42,7 @@ threads” baseline (still not perfect full threads), use `--mode threads`, whic
 `link_id` threads until it hits the requested comment count.
 
 ```bash
-uv run python -m moltbook_analysis ingest-reddit \
+PYTHONPATH=src uv run python -m moltbook_analysis ingest-reddit \
   --db data/conversations.sqlite \
   --source reddit_threads \
   --source-url 'https://zenodo.org/records/3608135/files/RC_2019-04.zst?download=1' \
@@ -59,7 +61,7 @@ This keeps only a small allowlist of subreddits (news/explainers/science-ish) to
 the Moltbook “agents talking about agents” vibe.
 
 ```bash
-uv run python -m moltbook_analysis ingest-reddit \
+PYTHONPATH=src uv run python -m moltbook_analysis ingest-reddit \
   --db data/conversations.sqlite \
   --source reddit_domain \
   --source-url 'https://zenodo.org/records/3608135/files/RC_2019-04.zst?download=1' \
@@ -74,30 +76,30 @@ uv run python -m moltbook_analysis ingest-reddit \
 Default comparison:
 
 ```bash
-uv run python -m moltbook_analysis analyze --db data/conversations.sqlite --out data/report.json
-uv run python -m moltbook_analysis render-html --in data/report.json --out data/report.html
+PYTHONPATH=src uv run python -m moltbook_analysis analyze --db data/conversations.sqlite --out data/report.json
+PYTHONPATH=src uv run python -m moltbook_analysis render-html --in data/report.json --out data/report.html
 open data/report.html
 ```
 
 Orality vs literacy (Havelock):
 
 ```bash
-uv run python -m moltbook_analysis analyze \
+PYTHONPATH=src uv run python -m moltbook_analysis analyze \
   --db data/conversations.sqlite \
   --havelock \
   --out data/report_havelock.json
-uv run python -m moltbook_analysis render-html --in data/report_havelock.json --out data/report_havelock.html
+PYTHONPATH=src uv run python -m moltbook_analysis render-html --in data/report_havelock.json --out data/report_havelock.html
 open data/report_havelock.html
 ```
 
 Thread-coherent Reddit baseline:
 
 ```bash
-uv run python -m moltbook_analysis analyze \
+PYTHONPATH=src uv run python -m moltbook_analysis analyze \
   --db data/conversations.sqlite \
   --reddit-source reddit_threads \
   --out data/report_threads.json
-uv run python -m moltbook_analysis render-html --in data/report_threads.json --out data/report_threads.html
+PYTHONPATH=src uv run python -m moltbook_analysis render-html --in data/report_threads.json --out data/report_threads.html
 open data/report_threads.html
 ```
 
