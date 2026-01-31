@@ -79,6 +79,17 @@ uv run python -m moltbook_analysis render-html --in data/report.json --out data/
 open data/report.html
 ```
 
+Orality vs literacy (Havelock):
+
+```bash
+uv run python -m moltbook_analysis analyze \
+  --db data/conversations.sqlite \
+  --havelock \
+  --out data/report_havelock.json
+uv run python -m moltbook_analysis render-html --in data/report_havelock.json --out data/report_havelock.html
+open data/report_havelock.html
+```
+
 Thread-coherent Reddit baseline:
 
 ```bash

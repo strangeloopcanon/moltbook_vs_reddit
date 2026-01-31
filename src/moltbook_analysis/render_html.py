@@ -193,6 +193,56 @@ def render_html_report(report: dict[str, Any]) -> str:
 
         return f'<table class="items"><thead>{head}</thead><tbody>{body}</tbody></table>'
 
+    def _havelock_score_cell(row: dict[str, Any], *, cls: str) -> str:
+        h = row.get("havelock") if isinstance(row.get("havelock"), dict) else {}
+        score = h.get("score")
+        return "\n".join(
+            [
+                bar(score, cls=cls, max_value=100.0),
+                f'<div class="val">{esc(score)}</div>',
+            ]
+        )
+
+    def _havelock_ratio_cell(row: dict[str, Any], *, cls: str) -> str:
+        h = row.get("havelock") if isinstance(row.get("havelock"), dict) else {}
+        ratio = h.get("sentence_ratio")
+        return "\n".join(
+            [
+                bar(ratio, cls=cls, max_value=1.0),
+                f'<div class="val">{esc(pct(ratio))}</div>',
+            ]
+        )
+
+    def havelock_sections_table(rows: Any, *, cls: str) -> str:
+        if not isinstance(rows, list) or not rows:
+            return '<p class="muted">No section data.</p>'
+
+        head = (
+            "<tr>"
+            "<th>Section</th>"
+            "<th>Havelock score</th>"
+            "<th>Oral sentence ratio</th>"
+            "<th>Sample</th>"
+            "<th>Corpus msgs</th>"
+            "</tr>"
+        )
+        body_rows = []
+        for r in rows:
+            sample_txt = (
+                f"{esc(r.get('sampled_messages'))} msgs / {esc(r.get('sample_char_len'))} chars"
+            )
+            body_rows.append(
+                "<tr>"
+                f"<td>{esc(r.get('section'))}</td>"
+                f"<td>{_havelock_score_cell(r, cls=cls)}</td>"
+                f"<td>{_havelock_ratio_cell(r, cls=cls)}</td>"
+                f"<td>{sample_txt}</td>"
+                f"<td>{esc(r.get('message_count'))}</td>"
+                "</tr>"
+            )
+        body = "\n".join(body_rows)
+        return f'<table class="items"><thead>{head}</thead><tbody>{body}</tbody></table>'
+
     counts = {
         "moltbook_threads": get(["moltbook_threads"]),
         "reddit_threads": get(["reddit_threads"]),
@@ -254,6 +304,97 @@ def render_html_report(report: dict[str, Any]) -> str:
     r_top_unigrams = get(["metrics", "message_top_unigrams", "reddit"], default=[]) or []
     m_top_sigs = get(["metrics", "message_top_topic_signatures", "moltbook"], default=[]) or []
     r_top_sigs = get(["metrics", "message_top_topic_signatures", "reddit"], default=[]) or []
+
+    havelock = get(["metrics", "havelock_orality_literacy"], default=None)
+    havelock_html = ""
+    if isinstance(havelock, dict):
+        hm = havelock.get("moltbook") if isinstance(havelock.get("moltbook"), dict) else {}
+        hr = havelock.get("reddit") if isinstance(havelock.get("reddit"), dict) else {}
+
+        hm_over = hm.get("overall") if isinstance(hm.get("overall"), dict) else {}
+        hr_over = hr.get("overall") if isinstance(hr.get("overall"), dict) else {}
+        hm_over_h = hm_over.get("havelock") if isinstance(hm_over.get("havelock"), dict) else {}
+        hr_over_h = hr_over.get("havelock") if isinstance(hr_over.get("havelock"), dict) else {}
+
+        hm_sum = hm.get("summary") if isinstance(hm.get("summary"), dict) else {}
+        hr_sum = hr.get("summary") if isinstance(hr.get("summary"), dict) else {}
+
+        havelock_rows = "\n".join(
+            [
+                metric_row(
+                    "Overall score (sample)",
+                    hm_over_h.get("score"),
+                    hr_over_h.get("score"),
+                    value_fmt="raw",
+                    bar_max=100.0,
+                ),
+                metric_row(
+                    "Oral sentence ratio (sample)",
+                    hm_over_h.get("sentence_ratio"),
+                    hr_over_h.get("sentence_ratio"),
+                    value_fmt="pct",
+                    bar_max=1.0,
+                ),
+                metric_row(
+                    "Mean section score",
+                    hm_sum.get("mean_score"),
+                    hr_sum.get("mean_score"),
+                    value_fmt="raw",
+                    bar_max=100.0,
+                ),
+                metric_row(
+                    "Weighted mean section score",
+                    hm_sum.get("weighted_mean_score"),
+                    hr_sum.get("weighted_mean_score"),
+                    value_fmt="raw",
+                    bar_max=100.0,
+                ),
+            ]
+        )
+
+        hm_sections = hm.get("sections") if isinstance(hm.get("sections"), list) else []
+        hr_sections = hr.get("sections") if isinstance(hr.get("sections"), list) else []
+
+        havelock_html = "\n".join(
+            [
+                '      <div class="card">',
+                "        <h2>Orality vs literacy (Havelock)</h2>",
+                '        <p class="muted">',
+                "          Havelock scores text on a 0–100 scale (0=highly literate,",
+                "          100=highly oral).",
+                "          Sections are top subcommunities by message count.",
+                "          Each section is scored on a deterministic sample of messages.",
+                "        </p>",
+                "        <table>",
+                "          <thead>",
+                "            <tr><th></th><th>Moltbook</th><th>Reddit</th></tr>",
+                "          </thead>",
+                "          <tbody>",
+                havelock_rows,
+                "          </tbody>",
+                "        </table>",
+                "        <details>",
+                "          <summary>Section breakdown</summary>",
+                "          <h2>Moltbook sections</h2>",
+                havelock_sections_table(hm_sections, cls="moltbook"),
+                "          <h2>Reddit sections</h2>",
+                havelock_sections_table(hr_sections, cls="reddit"),
+                "        </details>",
+                "      </div>",
+            ]
+        )
+    else:
+        havelock_html = "\n".join(
+            [
+                '      <div class="card">',
+                "        <h2>Orality vs literacy (Havelock)</h2>",
+                '        <p class="muted">',
+                "          No Havelock results in this report.",
+                "          Re-run analyze with --havelock to fetch them.",
+                "        </p>",
+                "      </div>",
+            ]
+        )
 
     redundancy_rows = "\n".join(
         [
@@ -999,6 +1140,8 @@ def render_html_report(report: dict[str, Any]) -> str:
           {top_items_table(r_top_unigrams, kind="items")}
         </details>
       </div>
+
+{havelock_html}
 
       <div class="card">
         <h2>Topic bucket concentration (message-level signatures)</h2>

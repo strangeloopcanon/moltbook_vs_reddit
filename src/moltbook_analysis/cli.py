@@ -6,7 +6,7 @@ from pathlib import Path
 from .ingest_moltbook import ingest_moltbook
 from .ingest_reddit import ingest_reddit
 from .render_html import render_html_file
-from .run_analysis import run_analysis
+from .run_analysis import HavelockParams, run_analysis
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -60,6 +60,52 @@ def main(argv: list[str] | None = None) -> int:
         default="reddit_domain",
         help="DB source name for the domain-matched Reddit baseline (default: reddit_domain)",
     )
+    p_analyze.add_argument(
+        "--havelock",
+        action="store_true",
+        help="Add Havelock orality/literacy scores per section (calls https://havelock.ai/api)",
+    )
+    p_analyze.add_argument(
+        "--havelock-base-url",
+        default=HavelockParams.base_url,
+        help="Override Havelock base URL (default: demo Hugging Face Space)",
+    )
+    p_analyze.add_argument(
+        "--havelock-top-sections",
+        type=int,
+        default=HavelockParams.top_n_sections,
+        help="Number of top subcommunities/subreddits to score per source",
+    )
+    p_analyze.add_argument(
+        "--havelock-sample-messages",
+        type=int,
+        default=HavelockParams.sample_messages,
+        help="How many messages to sample per section before truncation",
+    )
+    p_analyze.add_argument(
+        "--havelock-max-chars",
+        type=int,
+        default=HavelockParams.max_chars,
+        help="Max characters sent to Havelock per section",
+    )
+    p_analyze.add_argument(
+        "--havelock-include-sentences",
+        action="store_true",
+        default=HavelockParams.include_sentences,
+        help="Request per-sentence output (may increase response size)",
+    )
+    p_analyze.add_argument(
+        "--havelock-seed",
+        type=int,
+        default=HavelockParams.seed,
+        help="Seed for deterministic section sampling",
+    )
+    p_analyze.add_argument(
+        "--havelock-domain",
+        action="store_true",
+        default=HavelockParams.include_domain,
+        help="Also compute Havelock section scores for --reddit-domain-source",
+    )
 
     p_html = sub.add_parser("render-html", help="Render an HTML report from analyze JSON output")
     p_html.add_argument("--in", dest="report_json", type=Path, required=True)
@@ -101,6 +147,16 @@ def main(argv: list[str] | None = None) -> int:
             min_thread_messages=args.min_thread_messages,
             reddit_source=args.reddit_source,
             reddit_domain_source=args.reddit_domain_source,
+            havelock=HavelockParams(
+                enabled=bool(args.havelock),
+                base_url=str(args.havelock_base_url),
+                top_n_sections=int(args.havelock_top_sections),
+                sample_messages=int(args.havelock_sample_messages),
+                max_chars=int(args.havelock_max_chars),
+                include_sentences=bool(args.havelock_include_sentences),
+                seed=int(args.havelock_seed),
+                include_domain=bool(args.havelock_domain),
+            ),
         )
         if args.out is not None:
             args.out.parent.mkdir(parents=True, exist_ok=True)

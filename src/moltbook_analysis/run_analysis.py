@@ -9,6 +9,7 @@ from dataclasses import dataclass
 from pathlib import Path
 
 from .db import init_db
+from .havelock_client import HavelockClient
 from .metrics import (
     ThreadMetrics,
     clean_text,
@@ -26,6 +27,7 @@ from .metrics import (
     topic_signatures,
     type_token_ratio,
 )
+from .orality import havelock_orality_by_section
 
 
 @dataclass(frozen=True)
@@ -57,6 +59,18 @@ class AnalysisReport:
         if self.metrics_domain is not None:
             obj["metrics_domain"] = self.metrics_domain
         return json.dumps(obj, ensure_ascii=False, indent=indent)
+
+
+@dataclass(frozen=True)
+class HavelockParams:
+    enabled: bool = False
+    base_url: str = "https://thestalwart-havelock-demo.hf.space"
+    top_n_sections: int = 8
+    sample_messages: int = 200
+    max_chars: int = 8000
+    include_sentences: bool = False
+    seed: int = 1337
+    include_domain: bool = False
 
 
 def _fetch_thread_texts(
@@ -532,6 +546,7 @@ def run_analysis(
     min_thread_messages: int = 5,
     reddit_source: str = "reddit",
     reddit_domain_source: str = "reddit_domain",
+    havelock: HavelockParams | None = None,
 ) -> AnalysisReport:
     db = init_db(db_path)
     with db.connect() as conn:
@@ -899,6 +914,53 @@ def run_analysis(
                     },
                 }
             )
+
+        if havelock is not None and havelock.enabled:
+            client = HavelockClient(base_url=havelock.base_url)
+            molt_orality = havelock_orality_by_section(
+                conn,
+                client=client,
+                source="moltbook",
+                top_n_sections=havelock.top_n_sections,
+                sample_messages=havelock.sample_messages,
+                max_chars=havelock.max_chars,
+                include_sentences=havelock.include_sentences,
+                seed=havelock.seed,
+            )
+            red_orality = havelock_orality_by_section(
+                conn,
+                client=client,
+                source=reddit_source,
+                top_n_sections=havelock.top_n_sections,
+                sample_messages=havelock.sample_messages,
+                max_chars=havelock.max_chars,
+                include_sentences=havelock.include_sentences,
+                seed=havelock.seed,
+            )
+            metrics["havelock_orality_literacy"] = {
+                "provider": "havelock.ai",
+                "base_url": havelock.base_url,
+                "moltbook": molt_orality,
+                "reddit": red_orality,
+            }
+
+            if metrics_domain is not None and havelock.include_domain:
+                red_dom_orality = havelock_orality_by_section(
+                    conn,
+                    client=client,
+                    source=reddit_domain_source,
+                    top_n_sections=havelock.top_n_sections,
+                    sample_messages=havelock.sample_messages,
+                    max_chars=havelock.max_chars,
+                    include_sentences=havelock.include_sentences,
+                    seed=havelock.seed,
+                )
+                metrics_domain["havelock_orality_literacy"] = {
+                    "provider": "havelock.ai",
+                    "base_url": havelock.base_url,
+                    "moltbook": molt_orality,
+                    "reddit": red_dom_orality,
+                }
 
         return AnalysisReport(
             moltbook_threads=len(molt),
