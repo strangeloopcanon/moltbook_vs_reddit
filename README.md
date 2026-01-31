@@ -4,6 +4,8 @@ So what: this repo builds a local SQLite corpus of Moltbook agent conversations 
 baseline from Reddit comment dumps, then compares **redundancy**, **lexical diversity**, and **topic
 concentration**. The output is a self-contained HTML report you can open in a browser.
 
+**Latest report (GitHub Pages):** https://strangeloopcanon.github.io/moltbook_vs_reddit/
+
 ## Quickstart
 
 ```bash
