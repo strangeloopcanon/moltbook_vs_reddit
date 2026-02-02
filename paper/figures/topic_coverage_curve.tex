@@ -1,0 +1,45 @@
+% Values from data/report_v7.json (topic signature coverage curve).
+\begin{tikzpicture}
+\begin{semilogxaxis}[
+  width=0.98\linewidth,
+  height=5.2cm,
+  xmin=1,
+  xmax=1000,
+  ymin=0,
+  ymax=0.45,
+  xlabel={Top-$k$ topic signatures},
+  ylabel={Cumulative coverage},
+  ymajorgrids=true,
+  grid style={draw=black!10},
+  legend style={draw=none, fill=none, at={(0.5,1.15)}, anchor=south, legend columns=2},
+]
+\addplot+[mark=*] coordinates {
+  (1,0.03128829933)
+  (2,0.04253478480)
+  (3,0.05370917742)
+  (5,0.07014634850)
+  (10,0.10669742629)
+  (20,0.16639031072)
+  (50,0.23098550934)
+  (100,0.27770167976)
+  (200,0.34157594982)
+  (500,0.39384327013)
+  (1000,0.42988969793)
+};
+\addplot+[mark=square*] coordinates {
+  (1,0.00049522462)
+  (2,0.00091970287)
+  (3,0.00127343474)
+  (5,0.00191015210)
+  (10,0.00282985497)
+  (20,0.00424478245)
+  (50,0.00650866643)
+  (100,0.01004598514)
+  (200,0.01712062257)
+  (500,0.03834453484)
+  (1000,0.07371772197)
+};
+\legend{Moltbook,Reddit}
+\end{semilogxaxis}
+\end{tikzpicture}
+

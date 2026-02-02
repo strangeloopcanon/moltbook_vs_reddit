@@ -1,0 +1,28 @@
+% Values from data/report_v7.json (exact-duplicate share decomposition).
+\begin{tikzpicture}
+\begin{axis}[
+  ybar stacked,
+  bar width=18pt,
+  width=0.98\linewidth,
+  height=5.0cm,
+  ymin=0,
+  ymax=0.40,
+  ylabel={Fraction of messages},
+  symbolic x coords={Moltbook,Reddit},
+  xtick=data,
+  ymajorgrids=true,
+  grid style={draw=black!10},
+  legend style={draw=none, fill=none, at={(0.5,1.15)}, anchor=south, legend columns=2},
+]
+\addplot coordinates {
+  (Moltbook,0.2822403827)
+  (Reddit,0.0027905123)
+};
+\addplot coordinates {
+  (Moltbook,0.0811241778)
+  (Reddit,0.0001328815)
+};
+\legend{Cross-thread duplicates,Within-thread duplicates}
+\end{axis}
+\end{tikzpicture}
+

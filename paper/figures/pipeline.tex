@@ -1,0 +1,19 @@
+\begin{tikzpicture}[
+  node/.style={draw, rounded corners, align=center, inner xsep=8pt, inner ysep=6pt},
+  arrow/.style={-{Latex[length=2.5mm]}, line width=0.6pt},
+  font=\small,
+]
+\node[node, fill=blue!5] (molt) {Moltbook\\API ingest};
+\node[node, fill=blue!5, right=20mm of molt] (reddit) {Reddit\\comment dump\\(stream sample)};
+
+\node[node, fill=green!6, below=12mm of $(molt)!0.5!(reddit)$] (clean) {Normalize \& clean\\(URLs, Markdown)};
+\node[node, fill=green!6, below=10mm of clean] (match) {Length-match messages\\(character-length bins)};
+\node[node, fill=orange!8, below=10mm of match] (metrics) {Compute metrics\\(redundancy, diversity, topics)};
+\node[node, fill=orange!8, below=10mm of metrics] (report) {Report JSON\\\& paper figures};
+
+\draw[arrow] (molt) -- (clean);
+\draw[arrow] (reddit) -- (clean);
+\draw[arrow] (clean) -- (match);
+\draw[arrow] (match) -- (metrics);
+\draw[arrow] (metrics) -- (report);
+\end{tikzpicture}

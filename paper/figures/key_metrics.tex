@@ -1,0 +1,33 @@
+% Values from data/report_v7.json (message-length-matched sample).
+\begin{tikzpicture}
+\begin{axis}[
+  ybar,
+  bar width=11pt,
+  width=0.98\linewidth,
+  height=5.0cm,
+  ymin=0,
+  ymax=0.42,
+  ylabel={Fraction},
+  symbolic x coords={DupShare,BoWDupShare,Distinct1,TopicTop10},
+  xtick=data,
+  xticklabels={\shortstack{Exact\\dup. share},\shortstack{BoW\\dup. share},Distinct-1,\shortstack{Top-10\\sig. cov.}},
+  x tick label style={align=center, font=\small},
+  ymajorgrids=true,
+  grid style={draw=black!10},
+  legend style={draw=none, fill=none, at={(0.5,1.15)}, anchor=south, legend columns=2},
+]
+\addplot coordinates {
+  (DupShare,0.3633645605)
+  (BoWDupShare,0.3919648211)
+  (Distinct1,0.0558874161)
+  (TopicTop10,0.1066974263)
+};
+\addplot coordinates {
+  (DupShare,0.0029233938)
+  (BoWDupShare,0.0031252078)
+  (Distinct1,0.1027009630)
+  (TopicTop10,0.0028298550)
+};
+\legend{Moltbook,Reddit}
+\end{axis}
+\end{tikzpicture}
